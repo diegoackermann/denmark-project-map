@@ -86,6 +86,11 @@
     // Only auto-resize on window resize if user hasn't saved a custom position
     window.addEventListener('resize', () => { if (!editing && !bannerSaved) initImageSize(); });
 
+    // ---- Hardcoded default banner position (works without server) ----
+    const DEFAULT_BANNER_POSITION = { x: 0, y: -26, w: null, h: null, baseW: null };
+    // The defaults use a ratio-based approach: y offset = -26px, image fills area width * 1.1
+    // If server has saved data it overrides these; otherwise these are used.
+
     // Load saved banner from server (overrides defaults if settings exist)
     loadBanner();
 
@@ -163,10 +168,22 @@
           else img.addEventListener('load', reveal, { once: true });
         }
       } catch (err) {
-        // API not available — just show default
-        const reveal = () => { initImageSize(); img.classList.add('banner-ready'); };
-        if (img.complete) reveal();
-        else img.addEventListener('load', reveal, { once: true });
+        // API not available — use hardcoded default position
+        const revealWithDefaults = () => {
+          naturalW = img.naturalWidth || 1500;
+          naturalH = img.naturalHeight || 800;
+          const areaRect = area.getBoundingClientRect();
+          imgW = areaRect.width * 1.1;
+          imgH = (imgW / naturalW) * naturalH;
+          imgX = (areaRect.width - imgW) / 2;
+          imgY = DEFAULT_BANNER_POSITION.y;
+          baseW = imgW;
+          applyPosition();
+          bannerSaved = true; // prevent auto-resize from overriding
+          img.classList.add('banner-ready');
+        };
+        if (img.complete) revealWithDefaults();
+        else img.addEventListener('load', revealWithDefaults, { once: true });
       }
     }
 
