@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<!--
+______ __
+/ ____/___ ____ ___ ____ __ __/ /____ _____
+/ / / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/ __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+/_/
+Created with Perplexity Computer
+https://www.perplexity.ai/computer
+-->
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇩🇰 Denmark — Project Overview</title>
+<!-- Fonts -->
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="command-bar.css">
+</head>
+<body>
+<!-- Banner Edit Button (outside banner-area to avoid z-index stacking issues) -->
+<button class="banner-edit-btn" id="bannerEditBtn" title="Edit banner image">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<input type="file" id="bannerFileInput" accept="image/*" style="display:none" />
+<!-- Editable Flag Banner -->
+<div class="banner-area" id="bannerArea">
+<img class="banner-img" id="bannerImg" src="dk-flag-ribbon.jpg" alt="Denmark flag" draggable="false" />
+<!-- Edit mode toolbar -->
+<div class="banner-toolbar" id="bannerToolbar">
+<button class="banner-tool-btn" id="bannerUploadBtn" title="Upload new image">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+Upload
+</button>
+<span class="banner-tool-hint">Drag to position · Scroll to zoom</span>
+<div class="banner-zoom-group">
+<button class="banner-zoom-btn" id="bannerZoomOut" title="Zoom out">&minus;</button>
+<span class="banner-zoom-level" id="bannerZoomLevel">100%</span>
+<button class="banner-zoom-btn" id="bannerZoomIn" title="Zoom in">&plus;</button>
+</div>
+<button class="banner-tool-btn banner-tool-btn--done" id="bannerDoneBtn">Done</button>
+</div>
+<!-- Resize handles (visible in edit mode) -->
+<div class="banner-handle banner-handle--tl" data-handle="tl"></div>
+<div class="banner-handle banner-handle--tr" data-handle="tr"></div>
+<div class="banner-handle banner-handle--bl" data-handle="bl"></div>
+<div class="banner-handle banner-handle--br" data-handle="br"></div>
+</div>
+<!-- Header -->
+<header class="header">
+<div class="header-left">
+<h1 class="header-title">Project Overview</h1>
+<p class="header-subtitle">Real-time project status map</p>
+</div>
+<div class="header-center">
+<!-- Completion Ring -->
+<div class="completion-widget">
+<div class="completion-ring" id="completionRing">
+<svg viewBox="0 0 80 80" class="completion-svg">
+<circle class="completion-track" cx="40" cy="40" r="34" />
+<circle class="completion-fill" id="completionFill" cx="40" cy="40" r="34" />
+</svg>
+<span class="completion-text" id="completionText">0%</span>
+</div>
+<span class="completion-label">Completion</span>
+</div>
+</div>
+<div class="header-right">
+<button class="sync-indicator" id="syncIndicator" title="Click to refresh data">
+<span class="sync-indicator-dot" id="syncDot"></span>
+<span class="sync-indicator-text" id="syncText">Synced just now</span>
+<svg class="sync-indicator-icon" id="syncIcon" width="13" height="13" viewBox="0 0 24 24" fill="none">
+<path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</button>
+<button class="activity-feed-toggle" id="activityFeedToggle" title="Activity feed">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<span class="activity-feed-badge" id="activityBadge">5</span>
+</button>
+</div>
+</header>
+<!-- Filter Bar -->
+<div class="filter-bar" id="filterBar">
+<div class="filter-group">
+<span class="filter-label">Status</span>
+<button class="filter-chip" data-filter="status" data-value="green"><span class="filter-dot filter-dot--green"></span>On Track</button>
+<button class="filter-chip" data-filter="status" data-value="amber"><span class="filter-dot filter-dot--amber"></span>Attention</button>
+<button class="filter-chip" data-filter="status" data-value="red"><span class="filter-dot filter-dot--red"></span>Blocked</button>
+<button class="filter-chip" data-filter="status" data-value="blue"><span class="filter-dot filter-dot--blue"></span>Completed</button>
+</div>
+<div class="filter-divider"></div>
+<div class="filter-group">
+<span class="filter-label">Workstream</span>
+<button class="filter-chip" data-filter="workstream" data-value="negotiation">🤝 Negotiation</button>
+<button class="filter-chip" data-filter="workstream" data-value="technical">⚙️ Technical</button>
+<button class="filter-chip" data-filter="workstream" data-value="legal">⚖️ Legal</button>
+<button class="filter-chip" data-filter="workstream" data-value="documents">📄 Documents</button>
+<button class="filter-chip" data-filter="workstream" data-value="comms">💬 Comms</button>
+</div>
+<div class="filter-divider"></div>
+<div class="filter-group filter-group--assignee">
+<span class="filter-label">Assignee</span>
+<div class="assignee-search-wrapper" id="assigneeSearchWrapper">
+<svg class="assignee-search-icon" width="13" height="13" viewBox="0 0 18 18" fill="none">
+<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+<path d="M12 12L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+<input class="assignee-search-input" id="assigneeSearchInput" type="text" placeholder="Search people..." autocomplete="off" spellcheck="false" />
+<div class="assignee-results" id="assigneeResults"></div>
+</div>
+<!-- Active assignee tags shown here -->
+<div class="assignee-active-tags" id="assigneeActiveTags"></div>
+</div>
+<div class="filter-divider"></div>
+<div class="filter-group">
+<span class="filter-label">Focus</span>
+<button class="filter-chip" data-filter="focus" data-value="needs-action">🎯 Needs My Action</button>
+<button class="filter-chip" data-filter="focus" data-value="overdue">⏰ Overdue</button>
+<button class="filter-chip" data-filter="focus" data-value="has-dependencies">🔗 Has Dependencies</button>
+</div>
+<div class="filter-divider"></div>
+<button class="filter-chip filter-chip--clear" id="clearFilters">✕ Clear All</button>
+</div>
+<!-- Main map area -->
+<main class="map-viewport" id="mapViewport">
+<div class="map-container" id="mapContainer">
+<svg class="connections-svg" id="connectionsSvg"></svg>
+<!-- All nodes are positioned absolutely by JS -->
+</div>
+</main>
+<!-- Detail Panel (slide-out) -->
+<div class="detail-panel" id="detailPanel">
+<button class="detail-panel-close" id="detailClose" aria-label="Close panel">&times;</button>
+<div class="detail-panel-content" id="detailContent"></div>
+</div>
+<div class="detail-overlay" id="detailOverlay"></div>
+<!-- Activity Feed Panel -->
+<div class="activity-feed" id="activityFeed">
+<div class="activity-feed-header">
+<h3 class="activity-feed-title">Activity</h3>
+<span class="activity-feed-subtitle">Recent changes</span>
+<button class="activity-feed-close" id="activityFeedClose" aria-label="Close activity feed">&times;</button>
+</div>
+<div class="activity-feed-list" id="activityFeedList">
+<!-- Populated by JS -->
+</div>
+</div>
+<div class="activity-feed-backdrop" id="activityFeedBackdrop"></div>
+<!-- Footer -->
+<footer class="footer">
+<a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+Created with Perplexity Computer
+</a>
+</footer>
+<script src="app.js"></script>
+<script src="command-bar.js"></script>
+</body>
+</html>
