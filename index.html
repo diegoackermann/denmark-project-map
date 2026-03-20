@@ -47,11 +47,6 @@ Upload
 </div>
 <button class="banner-tool-btn banner-tool-btn--done" id="bannerDoneBtn">Done</button>
 </div>
-<!-- Resize handles (visible in edit mode) -->
-<div class="banner-handle banner-handle--tl" data-handle="tl"></div>
-<div class="banner-handle banner-handle--tr" data-handle="tr"></div>
-<div class="banner-handle banner-handle--bl" data-handle="bl"></div>
-<div class="banner-handle banner-handle--br" data-handle="br"></div>
 </div>
 <!-- Header -->
 <header class="header">
@@ -73,14 +68,10 @@ Upload
 </div>
 </div>
 <div class="header-right">
-<button class="sync-indicator" id="syncIndicator" title="Click to refresh data">
-<span class="sync-indicator-dot" id="syncDot"></span>
-<span class="sync-indicator-text" id="syncText">Synced just now</span>
-<svg class="sync-indicator-icon" id="syncIcon" width="13" height="13" viewBox="0 0 24 24" fill="none">
-<path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-</button>
+<div class="sync-indicator sync-indicator--static" id="syncIndicator">
+<span class="sync-indicator-dot sync-indicator-dot--live" id="syncDot"></span>
+<span class="sync-indicator-text" id="syncText">Project data up to date</span>
+</div>
 <button class="activity-feed-toggle" id="activityFeedToggle" title="Activity feed">
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>

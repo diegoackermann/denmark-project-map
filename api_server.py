@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Banner persistence server — saves uploaded banner images and position to disk."""
+"""Persistence server — saves banner, layout positions, and todo states to disk."""
 import json
 import base64
 import os
@@ -12,6 +12,8 @@ DATA_DIR = Path(__file__).parent / "banner_data"
 DATA_DIR.mkdir(exist_ok=True)
 POSITION_FILE = DATA_DIR / "position.json"
 IMAGE_FILE = DATA_DIR / "banner_upload.jpg"
+LAYOUT_FILE = DATA_DIR / "layout.json"
+TODOS_FILE = DATA_DIR / "todos.json"
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -49,6 +51,36 @@ async def save_banner(request: Request):
     if IMAGE_FILE.exists():
         result["image"] = "api/banner/image"
     return result
+
+@app.get("/api/layout")
+def get_layout():
+    if LAYOUT_FILE.exists():
+        return json.loads(LAYOUT_FILE.read_text())
+    return {}
+
+@app.post("/api/layout")
+async def save_layout(request: Request):
+    data = await request.json()
+    positions = data.get("positions") if data else None
+    if not positions:
+        # Clear layout
+        if LAYOUT_FILE.exists():
+            LAYOUT_FILE.unlink()
+        return {"ok": True}
+    LAYOUT_FILE.write_text(json.dumps({"positions": positions}))
+    return {"ok": True}
+
+@app.get("/api/todos")
+def get_todos():
+    if TODOS_FILE.exists():
+        return json.loads(TODOS_FILE.read_text())
+    return {}
+
+@app.post("/api/todos")
+async def save_todos(request: Request):
+    data = await request.json()
+    TODOS_FILE.write_text(json.dumps(data))
+    return {"ok": True}
 
 if __name__ == "__main__":
     import uvicorn

@@ -11,6 +11,29 @@
   // ---- API Base URL (works locally and after deploy via proxy) ----
   const API_BASE = '__PORT_8000__'.startsWith('__') ? 'http://localhost:8000' : '__PORT_8000__';
 
+  // ---- Todo Checked State ----
+  var todoCheckedState = {};
+  var todoStateLoaded = false;
+
+  function saveTodoState() {
+    fetch(API_BASE + '/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(todoCheckedState)
+    }).catch(function(err) { console.warn('Todo save failed:', err); });
+  }
+
+  function loadTodoState() {
+    if (todoStateLoaded) return Promise.resolve();
+    return fetch(API_BASE + '/api/todos')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        todoCheckedState = data || {};
+        todoStateLoaded = true;
+      })
+      .catch(function() { todoStateLoaded = true; });
+  }
+
   // ---- Banner Editor ----
   (function initBannerEditor() {
     const area = document.getElementById('bannerArea');
@@ -182,8 +205,12 @@
           bannerSaved = true; // prevent auto-resize from overriding
           img.classList.add('banner-ready');
         };
-        if (img.complete) revealWithDefaults();
-        else img.addEventListener('load', revealWithDefaults, { once: true });
+        if (img.complete && img.naturalWidth > 0) revealWithDefaults();
+        else {
+          img.addEventListener('load', revealWithDefaults, { once: true });
+          // Safety: if image fails to load, still show area with dark bg
+          img.addEventListener('error', () => { img.classList.add('banner-ready'); }, { once: true });
+        }
       }
     }
 
@@ -780,13 +807,12 @@
           </h3>
           <div class="detail-todo-list">
             ${data.todos.map((todo, i) => `
-              <div class="detail-todo-item" data-todo-index="${i}">
+              <div class="detail-todo-item" data-todo-index="${i}" data-task-id="${taskId}">
+                <span class="detail-todo-check" data-task-id="${taskId}" data-todo-index="${i}" role="checkbox" aria-checked="false" tabindex="0">
+                  <svg class="todo-check-empty" width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+                  <svg class="todo-check-filled" width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:none"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.3"/><path d="M4 7l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
                 <button class="detail-todo-toggle" aria-expanded="false" aria-controls="todo-suggestion-${taskId}-${i}">
-                  <span class="detail-todo-bullet">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    </svg>
-                  </span>
                   <span class="detail-todo-text">${todo.text}</span>
                   <span class="detail-todo-chevron">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -922,6 +948,37 @@
         const todo = TASK_DATA[tId].todos[todoIdx];
         const action = todo.actions[actionIdx];
         showActionWorkspacePanel(action, todo, TASK_DATA[tId]);
+      });
+    });
+
+    // Bind todo checkbox clicks
+    detailContent.querySelectorAll('.detail-todo-check').forEach(chk => {
+      chk.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tId = chk.dataset.taskId;
+        const idx = parseInt(chk.dataset.todoIndex, 10);
+        const item = chk.closest('.detail-todo-item');
+        const isChecked = item.classList.toggle('todo-checked');
+        chk.setAttribute('aria-checked', String(isChecked));
+        chk.querySelector('.todo-check-empty').style.display = isChecked ? 'none' : '';
+        chk.querySelector('.todo-check-filled').style.display = isChecked ? '' : 'none';
+        const key = tId + ':' + idx;
+        todoCheckedState[key] = isChecked;
+        saveTodoState();
+      });
+    });
+
+    // Apply loaded todo checked states
+    loadTodoState().then(() => {
+      detailContent.querySelectorAll('.detail-todo-check').forEach(chk => {
+        const key = chk.dataset.taskId + ':' + chk.dataset.todoIndex;
+        if (todoCheckedState[key]) {
+          const item = chk.closest('.detail-todo-item');
+          item.classList.add('todo-checked');
+          chk.setAttribute('aria-checked', 'true');
+          chk.querySelector('.todo-check-empty').style.display = 'none';
+          chk.querySelector('.todo-check-filled').style.display = '';
+        }
       });
     });
 
@@ -1062,23 +1119,7 @@
             </button>
           </div>
           <div class="action-workspace-footer-right">
-            <button class="action-workspace-btn action-workspace-btn--secondary action-workspace-discard">Discard</button>
-            ${isEmail ? `<button class="action-workspace-btn action-workspace-btn--primary action-workspace-send">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Send Email
-            </button>` : ''}
-            ${isDoc ? `<button class="action-workspace-btn action-workspace-btn--primary action-workspace-download">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Download
-            </button>` : ''}
-            ${isMeeting ? `<button class="action-workspace-btn action-workspace-btn--primary action-workspace-schedule">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Schedule Meeting
-            </button>` : ''}
-            ${!isEmail && !isDoc && !isMeeting ? `<button class="action-workspace-btn action-workspace-btn--primary action-workspace-copy">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-              Copy Result
-            </button>` : ''}
+            <button class="action-workspace-btn action-workspace-btn--secondary action-workspace-discard">Close</button>
           </div>
         </div>
       </div>
@@ -1106,14 +1147,14 @@
       setTimeout(() => overlay.remove(), 250);
     });
 
-    // --- Revision Chat System ---
-    const chatForm = overlay.querySelector('.revision-chat-form');
-    const chatInput = overlay.querySelector('.revision-chat-input');
-    const chatMessages = overlay.querySelector('.revision-chat-messages');
-    const chatKey = `${taskData.title}__${todo.text}__${action.label}`.replace(/\s+/g, '_');
+    // --- Revision Chat removed (Phase 2 — no /api/revise backend) ---
+    const chatForm = null;
+    const chatInput = null;
+    const chatMessages = null;
+    const chatKey = null;
 
-    // Restore chat history for this specific action
-    if (revisionChatHistory[chatKey]) {
+    // Revision chat history restore disabled
+    if (false && chatMessages) {
       chatMessages.innerHTML = '';
       revisionChatHistory[chatKey].forEach(entry => {
         const bubble = document.createElement('div');
@@ -1381,49 +1422,25 @@
 
   // --- Email Composer Builder ---
   function buildEmailComposer(action, todo, taskData, mockDraft) {
-    // Extract recipients from instruction text
     const recipients = extractRecipients(action.instruction);
+    const toStr = recipients.to.join(', ');
+    const ccStr = recipients.cc.join(', ');
+    const plainBody = mockDraft.body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(toStr) + '&cc=' + encodeURIComponent(ccStr) + '&su=' + encodeURIComponent(mockDraft.subject) + '&body=' + encodeURIComponent(plainBody);
     return `
       <div class="action-workspace-body">
-        <div class="action-workspace-main">
-          <div class="email-composer">
-            <div class="email-field">
-              <span class="email-field-label">To</span>
-              <div class="email-field-value">
-                ${recipients.to.map(r => `<span class="email-chip">${r}</span>`).join('')}
-              </div>
+        <div class="action-workspace-main action-workspace-main--full">
+          <div class="quick-action-card">
+            <div class="quick-action-preview">
+              <div class="quick-action-meta"><span class="quick-action-meta-label">To</span><span class="quick-action-meta-value">${recipients.to.map(r => '<span class="email-chip">' + r + '</span>').join('')}</span></div>
+              ${recipients.cc.length > 0 ? '<div class="quick-action-meta"><span class="quick-action-meta-label">Cc</span><span class="quick-action-meta-value">' + recipients.cc.map(r => '<span class="email-chip">' + r + '</span>').join('') + '</span></div>' : ''}
+              <div class="quick-action-meta"><span class="quick-action-meta-label">Subject</span><span class="quick-action-meta-value">${mockDraft.subject}</span></div>
+              <div class="quick-action-body-preview">${mockDraft.body}</div>
             </div>
-            ${recipients.cc.length > 0 ? `
-              <div class="email-field">
-                <span class="email-field-label">Cc</span>
-                <div class="email-field-value">
-                  ${recipients.cc.map(r => `<span class="email-chip">${r}</span>`).join('')}
-                </div>
-              </div>
-            ` : ''}
-            <div class="email-field">
-              <span class="email-field-label">Subject</span>
-              <div class="email-field-value"><span class="email-subject">${mockDraft.subject}</span></div>
-            </div>
-            <div class="email-body-area">
-              <div class="email-draft-content">${mockDraft.body}</div>
-            </div>
-          </div>
-        </div>
-        <div class="action-workspace-sidebar">
-          <div class="revision-chat">
-            <div class="revision-chat-header">
-              <span class="revision-chat-title">💬 Revise with Perplexity</span>
-            </div>
-            <div class="revision-chat-messages">
-              <div class="revision-chat-msg revision-chat-msg--ai">Here's the draft based on the task context. Let me know if you'd like any changes — tone, recipients, details, length.</div>
-            </div>
-            <form class="revision-chat-form">
-              <input class="revision-chat-input" type="text" placeholder="e.g. Make it shorter, add the SLA deadline..." />
-              <button type="submit" class="revision-chat-send">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </form>
+            <a href="${gmailUrl}" target="_blank" rel="noopener noreferrer" class="quick-action-launch-btn quick-action-launch-btn--gmail">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Open in Gmail
+            </a>
           </div>
         </div>
       </div>
@@ -1434,40 +1451,18 @@
   function buildDocumentViewer(action, todo, taskData, mockDraft) {
     return `
       <div class="action-workspace-body">
-        <div class="action-workspace-main">
-          <div class="doc-viewer">
-            <div class="doc-viewer-toolbar">
-              <span class="doc-viewer-filename">${mockDraft.filename}</span>
-              <button class="doc-viewer-expand" title="Expand document">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </div>
-            <div class="doc-viewer-content">${mockDraft.body}</div>
-            ${mockDraft.visualSuggestion ? `
-              <div class="doc-visual-suggestion">
-                <div class="doc-visual-suggestion-header">
-                  <span class="doc-visual-suggestion-icon">🎨</span>
-                  <span class="doc-visual-suggestion-title">Visual Suggestion</span>
+        <div class="action-workspace-main action-workspace-main--full">
+          <div class="quick-action-card">
+            <div class="quick-action-preview">
+              <div class="doc-preview-card">
+                <div class="doc-preview-icon">📄</div>
+                <div class="doc-preview-info">
+                  <span class="doc-preview-filename">${mockDraft.filename}</span>
+                  <span class="doc-preview-desc">${action.instruction}</span>
                 </div>
-                <p class="doc-visual-suggestion-text">${mockDraft.visualSuggestion}</p>
               </div>
-            ` : ''}
-          </div>
-        </div>
-        <div class="action-workspace-sidebar">
-          <div class="revision-chat">
-            <div class="revision-chat-header">
-              <span class="revision-chat-title">💬 Revise with Perplexity</span>
+              ${mockDraft.visualSuggestion ? '<div class="doc-visual-hint"><span class="doc-visual-hint-icon">🎨</span><span>' + mockDraft.visualSuggestion + '</span></div>' : ''}
             </div>
-            <div class="revision-chat-messages">
-              <div class="revision-chat-msg revision-chat-msg--ai">Here's the document draft. You can review it above, expand for full view, or tell me what to change.</div>
-            </div>
-            <form class="revision-chat-form">
-              <input class="revision-chat-input" type="text" placeholder="e.g. Add a comparison table, change the tone..." />
-              <button type="submit" class="revision-chat-send">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </form>
           </div>
         </div>
       </div>
@@ -1478,25 +1473,11 @@
   function buildGenericWorkspace(action, todo, taskData, mockDraft) {
     return `
       <div class="action-workspace-body">
-        <div class="action-workspace-main">
-          <div class="generic-result">
-            <div class="generic-result-content">${mockDraft.body}</div>
-          </div>
-        </div>
-        <div class="action-workspace-sidebar">
-          <div class="revision-chat">
-            <div class="revision-chat-header">
-              <span class="revision-chat-title">💬 Revise with Perplexity</span>
+        <div class="action-workspace-main action-workspace-main--full">
+          <div class="quick-action-card">
+            <div class="quick-action-preview">
+              <div class="generic-result-content">${mockDraft.body}</div>
             </div>
-            <div class="revision-chat-messages">
-              <div class="revision-chat-msg revision-chat-msg--ai">Here are the results. Let me know if you'd like me to adjust anything.</div>
-            </div>
-            <form class="revision-chat-form">
-              <input class="revision-chat-input" type="text" placeholder="Ask me to refine, expand, or change..." />
-              <button type="submit" class="revision-chat-send">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </form>
           </div>
         </div>
       </div>
@@ -2841,48 +2822,6 @@
 
 
 
-  // Gentle edge-to-edge overlap resolution (no bouncing)
-  function resolveOverlaps(movedNode) {
-    const movedPos = getNodeCenter(movedNode);
-    const movedInner = movedNode.querySelector('.node-inner');
-    if (!movedInner) return;
-    const movedRect = movedInner.getBoundingClientRect();
-    const movedW = movedRect.width / zoom;
-    const movedH = movedRect.height / zoom;
-
-    const allNodeEls = [centralEl, ...wsEls, ...taskEls.map(t => t.el)];
-    allNodeEls.forEach(otherEl => {
-      if (otherEl === movedNode) return;
-      if (otherEl.classList.contains('collapsed-hidden')) return;
-      const otherPos = getNodeCenter(otherEl);
-      const otherInner = otherEl.querySelector('.node-inner');
-      if (!otherInner) return;
-      const otherRect = otherInner.getBoundingClientRect();
-      const otherW = otherRect.width / zoom;
-      const otherH = otherRect.height / zoom;
-
-      // Check real bounding box overlap (since nodes are centered via transform)
-      const halfW1 = movedW / 2, halfH1 = movedH / 2;
-      const halfW2 = otherW / 2, halfH2 = otherH / 2;
-
-      const overlapX = (halfW1 + halfW2) - Math.abs(movedPos.x - otherPos.x);
-      const overlapY = (halfH1 + halfH2) - Math.abs(movedPos.y - otherPos.y);
-
-      if (overlapX > 0 && overlapY > 0) {
-        // Push along the axis with smallest overlap (minimum displacement)
-        const angle = Math.atan2(otherPos.y - movedPos.y, otherPos.x - movedPos.x);
-        // Just push enough to clear + 2px gap
-        const pushAmt = Math.min(overlapX, overlapY) + 2;
-        const newX = otherPos.x + Math.cos(angle) * pushAmt;
-        const newY = otherPos.y + Math.sin(angle) * pushAmt;
-        otherEl.classList.add('bounce-away');
-        setNodePos(otherEl, newX, newY);
-        originalPositions.set(otherEl, { left: newX + 'px', top: newY + 'px' });
-        setTimeout(() => otherEl.classList.remove('bounce-away'), 400);
-      }
-    });
-  }
-
   // Redraw SVG lines based on current node positions
   function redrawLines() {
     const rect = container.getBoundingClientRect();
@@ -3384,9 +3323,12 @@
                 '</div>' +
               '</div>';
             }
-            return '<div class="detail-todo-item" data-todo-index="' + i + '">' +
+            return '<div class="detail-todo-item" data-todo-index="' + i + '" data-task-id="' + taskId + '">' +
+              '<span class="detail-todo-check" data-task-id="' + taskId + '" data-todo-index="' + i + '" role="checkbox" aria-checked="false" tabindex="0">' +
+                '<svg class="todo-check-empty" width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>' +
+                '<svg class="todo-check-filled" width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:none"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity="0.3"/><path d="M4 7l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+              '</span>' +
               '<button class="detail-todo-toggle" aria-expanded="false">' +
-                '<span class="detail-todo-bullet"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></span>' +
                 '<span class="detail-todo-text">' + todo.text + '</span>' +
                 '<span class="detail-todo-chevron"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 5L6 7L8 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
               '</button>' +
@@ -3461,6 +3403,38 @@
         var todo = TASK_DATA[tId].todos[todoIdx];
         var action = todo.actions[actionIdx];
         showActionWorkspacePanel(action, todo, TASK_DATA[tId]);
+      });
+    });
+
+    // Bind todo checkbox clicks
+    container.querySelectorAll('.detail-todo-check').forEach(function(chk) {
+      chk.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var tId = chk.dataset.taskId;
+        var idx = parseInt(chk.dataset.todoIndex, 10);
+        var item = chk.closest('.detail-todo-item');
+        var isChecked = item.classList.toggle('todo-checked');
+        chk.setAttribute('aria-checked', String(isChecked));
+        chk.querySelector('.todo-check-empty').style.display = isChecked ? 'none' : '';
+        chk.querySelector('.todo-check-filled').style.display = isChecked ? '' : 'none';
+        // Persist
+        var key = tId + ':' + idx;
+        todoCheckedState[key] = isChecked;
+        saveTodoState();
+      });
+    });
+
+    // Apply loaded todo checked states
+    loadTodoState().then(function() {
+      container.querySelectorAll('.detail-todo-check').forEach(function(chk) {
+        var key = chk.dataset.taskId + ':' + chk.dataset.todoIndex;
+        if (todoCheckedState[key]) {
+          var item = chk.closest('.detail-todo-item');
+          item.classList.add('todo-checked');
+          chk.setAttribute('aria-checked', 'true');
+          chk.querySelector('.todo-check-empty').style.display = 'none';
+          chk.querySelector('.todo-check-filled').style.display = '';
+        }
       });
     });
 
@@ -3843,67 +3817,8 @@
 
 
   // ================================================================
-  // LIVE SYNC INDICATOR
+  // STATIC SYNC INDICATOR (data is hardcoded, no real sync needed)
   // ================================================================
-  (function initSyncIndicator() {
-    var syncBtn = document.getElementById('syncIndicator');
-    var syncDot = document.getElementById('syncDot');
-    var syncText = document.getElementById('syncText');
-    if (!syncBtn) return;
-
-    var lastSyncTime = Date.now();
-    var syncInterval = null;
-
-    function formatTimeAgo(ms) {
-      var seconds = Math.floor(ms / 1000);
-      if (seconds < 10) return 'Synced just now';
-      if (seconds < 60) return 'Synced ' + seconds + 's ago';
-      var minutes = Math.floor(seconds / 60);
-      if (minutes === 1) return 'Synced 1 min ago';
-      if (minutes < 60) return 'Synced ' + minutes + ' min ago';
-      return 'Synced ' + Math.floor(minutes / 60) + 'h ago';
-    }
-
-    function updateSyncDisplay() {
-      var elapsed = Date.now() - lastSyncTime;
-      syncText.textContent = formatTimeAgo(elapsed);
-
-      // Fresh (< 2 min)
-      if (elapsed < 120000) {
-        syncDot.className = 'sync-indicator-dot';
-      }
-      // Stale (2-10 min)
-      else if (elapsed < 600000) {
-        syncDot.className = 'sync-indicator-dot stale';
-      }
-      // Error/very stale (> 10 min)
-      else {
-        syncDot.className = 'sync-indicator-dot error';
-      }
-    }
-
-    function simulateSync() {
-      syncBtn.classList.add('syncing');
-      syncText.textContent = 'Syncing\u2026';
-
-      setTimeout(function() {
-        lastSyncTime = Date.now();
-        syncBtn.classList.remove('syncing');
-        updateSyncDisplay();
-      }, 1800);
-    }
-
-    syncBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (!syncBtn.classList.contains('syncing')) {
-        simulateSync();
-      }
-    });
-
-    // Update time display every 15s
-    syncInterval = setInterval(updateSyncDisplay, 15000);
-    updateSyncDisplay();
-  })();
 
 
   // ================================================================
