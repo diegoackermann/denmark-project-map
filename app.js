@@ -982,11 +982,15 @@
       });
     });
 
-    // Bind notification item clicks — dismiss badge on interaction
+    // Bind notification item clicks — dismiss badge + open link
     detailContent.querySelectorAll('.panel-notif-item').forEach(function(item) {
       item.addEventListener('click', function(e) {
         e.stopPropagation();
         var nTaskId = item.getAttribute('data-notif-task');
+        var notifHref = item.getAttribute('data-notif-href');
+        if (notifHref && notifHref !== '#' && !notifHref.startsWith('#')) {
+          window.open(notifHref, '_blank', 'noopener,noreferrer');
+        }
         // Animate the item out
         item.style.transition = 'opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease';
         item.style.opacity = '0';
@@ -3920,32 +3924,32 @@
   var NOTIF_DATA = {
       'neg-1': {
         items: [
-          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Anna S\u00f8rensen', detail: 'Re: Rate Card Review', href: '#email-neg1' }
+          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Anna S\u00f8rensen', detail: 'Re: Rate Card Review', href: 'https://mail.google.com/mail/u/0/#search/from%3AAnna+S%C3%B8rensen+Rate+Card+Review' }
         ]
       },
       'tech-1': {
         items: [
-          { type: 'comment', icon: '\ud83d\udcac', label: '2 new comments on ClickUp', detail: 'API Integration task', href: '#clickup-tech1' }
+          { type: 'comment', icon: '\ud83d\udcac', label: '2 new comments on ClickUp', detail: 'API Integration task', href: 'https://app.clickup.com/9015438153/v/li/api-integration' }
         ]
       },
       'neg-2': {
         items: [
-          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Erik Lindqvist', detail: 'Re: SLA Framework v2.1', href: '#email-neg2' }
+          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Erik Lindqvist', detail: 'Re: SLA Framework v2.1', href: 'https://mail.google.com/mail/u/0/#search/from%3AErik+Lindqvist+SLA+Framework' }
         ]
       },
       'leg-2': {
         items: [
-          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Client Legal', detail: 'Re: Contract Amendment', href: '#email-leg2' }
+          { type: 'email', icon: '\u2709\ufe0f', label: '1 unread email from Client Legal', detail: 'Re: Contract Amendment', href: 'https://mail.google.com/mail/u/0/#search/Contract+Amendment' }
         ]
       },
       'neg-3': {
         items: [
-          { type: 'comment', icon: '\ud83d\udcac', label: '1 new comment from Mette Hansen', detail: 'Vendor Onboarding Pack', href: '#clickup-neg3' }
+          { type: 'comment', icon: '\ud83d\udcac', label: '1 new comment from Mette Hansen', detail: 'Vendor Onboarding Pack', href: 'https://app.clickup.com/9015438153/v/li/vendor-onboarding-pack' }
         ]
       },
       'doc-3': {
         items: [
-          { type: 'comment', icon: '\ud83d\udcac', label: '1 new comment from Astrid Olsen', detail: 'Archive Migration checklist', href: '#clickup-doc3' }
+          { type: 'comment', icon: '\ud83d\udcac', label: '1 new comment from Astrid Olsen', detail: 'Archive Migration checklist', href: 'https://app.clickup.com/9015438153/v/li/archive-migration' }
         ]
       }
     };
@@ -3983,7 +3987,7 @@
     if (!data || data.items.length === 0 || data.read) return '';
 
     var items = data.items.map(function(item, i) {
-      return '<div class="panel-notif-item" data-notif-idx="' + i + '" data-notif-task="' + taskId + '">' +
+      return '<div class="panel-notif-item" data-notif-idx="' + i + '" data-notif-task="' + taskId + '" data-notif-href="' + (item.href || '') + '">' +
         '<span class="panel-notif-icon">' + item.icon + '</span>' +
         '<div class="panel-notif-body">' +
           '<span class="panel-notif-label">' + item.label + '</span>' +
