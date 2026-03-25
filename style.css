@@ -110,7 +110,7 @@ body {
   z-index: 1; /* behind header, filter bar, and all content */
   overflow: hidden;
   pointer-events: none; /* passthrough by default */
-  background: #1a1a2e; /* dark fallback — never shows white */
+  background: var(--color-bg); /* match the map background for seamless look */
 }
 
 .banner-img {
@@ -132,11 +132,11 @@ body {
   opacity: 1;
 }
 
-/* Edit button — fixed position top-right, above everything */
+/* Edit button — inside banner top-right, above everything */
 .banner-edit-btn {
-  position: fixed;
+  position: absolute;
   top: 8px;
-  right: 56px;
+  right: 8px;
   z-index: 100;
   pointer-events: auto;
   background: rgba(0,0,0,0.5);
@@ -4208,17 +4208,17 @@ body.banner-editing .banner-edit-btn {
 
 .node-notif-badge {
   position: relative;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
   background: var(--color-accent);
   color: #fff;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 5px;
+  padding: 0 6px;
   line-height: 1;
   box-shadow: 0 0 10px var(--color-accent-glow), 0 2px 8px rgba(0, 0, 0, 0.3);
   z-index: 16;
@@ -4272,6 +4272,36 @@ body.banner-editing .banner-edit-btn {
   50% {
     box-shadow: 0 0 20px var(--badge-glow, rgba(79,152,163,0.7)), 0 2px 14px rgba(0,0,0,0.4);
     filter: brightness(1.25);
+  }
+}
+
+/* Pulsating glow on task bubbles that have notifications */
+.node--task.has-notifications .node-inner {
+  animation: notif-node-glow 4s ease-in-out 2.5s infinite;
+}
+
+@keyframes notif-node-glow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  50% {
+    box-shadow: 0 0 18px var(--color-accent-glow), 0 0 36px rgba(79, 152, 163, 0.12), 0 4px 20px rgba(0,0,0,0.25);
+  }
+}
+
+/* Pulsating highlight on notification items when opened from badge */
+.panel-notif-item.notif-item-pulsate {
+  animation: notif-item-pulse 1.5s ease-in-out 2;
+}
+
+@keyframes notif-item-pulse {
+  0%, 100% {
+    background: rgba(79, 152, 163, 0.05);
+    box-shadow: none;
+  }
+  50% {
+    background: rgba(79, 152, 163, 0.15);
+    box-shadow: 0 0 12px rgba(79, 152, 163, 0.2);
   }
 }
 

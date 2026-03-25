@@ -1049,6 +1049,21 @@
     if (!opts.fromAnswer) {
       detailOverlay.classList.add('active');
     }
+
+    // If opened from notification badge, scroll to notification section and pulsate items
+    if (opts.scrollToNotif) {
+      setTimeout(function() {
+        var notifSection = detailContent.querySelector('[data-notif-section="' + taskId + '"]');
+        if (notifSection) {
+          notifSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add pulsating highlight to notification items
+          notifSection.querySelectorAll('.panel-notif-item').forEach(function(item) {
+            item.classList.add('notif-item-pulsate');
+            setTimeout(function() { item.classList.remove('notif-item-pulsate'); }, 3000);
+          });
+        }
+      }, 350);
+    }
   }
 
   // Expose openPanel globally so command-bar.js can call it
@@ -2828,8 +2843,11 @@
 
   // Redraw SVG lines based on current node positions
   function redrawLines() {
-    const rect = container.getBoundingClientRect();
-    svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+    // Use offsetWidth/Height — these are the un-transformed container dimensions
+    // (getBoundingClientRect returns scaled values after pan/zoom transform)
+    const cw = container.offsetWidth || container.scrollWidth;
+    const ch = container.offsetHeight || container.scrollHeight;
+    svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
     svg.innerHTML = '';
     const cx = parseFloat(centralEl.style.left);
     const cy = parseFloat(centralEl.style.top);
@@ -3963,6 +3981,9 @@
       badge.style.transform = 'scale(0)';
       setTimeout(function() { badge.remove(); }, 500);
     }
+    // Remove pulsating glow from the task node
+    var taskNode = document.querySelector('.node--task[data-task="' + taskId + '"]');
+    if (taskNode) taskNode.classList.remove('has-notifications');
     // Also update the bell badge count
     var bellBadge = document.getElementById('activityBadge');
     if (bellBadge && !bellBadge.classList.contains('hidden')) {
@@ -4084,19 +4105,16 @@
       badge.addEventListener('mouseenter', function() { showTooltip(badge, data); });
       badge.addEventListener('mouseleave', function() { hideTooltip(); });
 
-      // Click: open the source (first item's href for now)
+      // Click: open the task detail panel (not external link)
       badge.addEventListener('click', function(e) {
         e.stopPropagation();
-        var href = data.items[0].href;
-        if (href && href !== '#' && !href.startsWith('#')) {
-          window.open(href, '_blank');
-        } else {
-          // For mock data, open the task panel to show the relevant info
-          if (typeof window.openPanel === 'function') {
-            window.openPanel(taskId);
-          }
+        if (typeof window.openPanel === 'function') {
+          window.openPanel(taskId, { scrollToNotif: true });
         }
       });
+
+      // Mark the task node as having notifications (for pulsating glow)
+      node.classList.add('has-notifications');
 
       // Place badge as FIRST child in title-link-dots (far left, before relationship dots)
       var dotsContainer = node.querySelector('.title-link-dots');
