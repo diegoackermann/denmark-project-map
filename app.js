@@ -3888,11 +3888,9 @@
         if (item.taskId && typeof window.openPanel === 'function') {
           el.addEventListener('click', function() {
             closeFeed();
-            // Dismiss the notification badge for this task
-            if (typeof dismissNotifBadge === 'function') {
-              dismissNotifBadge(item.taskId);
-            }
-            setTimeout(function() { window.openPanel(item.taskId); }, 400);
+            // Open panel with notification section highlighted — badge stays until
+            // user actively clicks the notification item inside the panel
+            setTimeout(function() { window.openPanel(item.taskId, { scrollToNotif: true }); }, 400);
           });
         }
 
