@@ -754,7 +754,7 @@
     if (rels.titleLinks.length > 0) {
       h += '<div class="detail-rel-group"><span class="detail-rel-group-label">Also belongs to</span>';
       rels.titleLinks.forEach(function(tl) {
-        h += '<div class="detail-rel-item detail-rel-item--title"><span class="detail-rel-dot" style="background:' + tl.color + '"></span><span>' + tl.wsEmoji + ' ' + tl.wsTitle + '</span></div>';
+        h += '<button class="detail-rel-item detail-rel-item--title" data-nav-ws="' + tl.wsId + '"><span class="detail-rel-dot" style="background:' + tl.color + '"></span><span>' + tl.wsEmoji + ' ' + tl.wsTitle + '</span></button>';
       });
       h += '</div>';
     }
@@ -1022,6 +1022,15 @@
         const from = btn.dataset.relFrom;
         const to = btn.dataset.relTo;
         if (from && to) openComparisonView(from, to);
+      });
+    });
+
+    // Bind "Also belongs to" clicks — navigate to the workstream bubble
+    detailContent.querySelectorAll('.detail-rel-item--title[data-nav-ws]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wsId = btn.dataset.navWs;
+        if (wsId) navigateToWorkstream(wsId);
       });
     });
 
