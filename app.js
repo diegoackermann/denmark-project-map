@@ -9,7 +9,7 @@
   const revisionChatHistory = {};
 
   // ---- API Base URL (works locally and after deploy via proxy) ----
-  const API_BASE = '__PORT_8000__'.startsWith('__') ? 'http://localhost:8000' : '__PORT_8000__';
+  const API_BASE = '.';
 
   // ---- Todo Checked State ----
   var todoCheckedState = {};
