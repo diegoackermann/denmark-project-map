@@ -94,9 +94,6 @@
         <path d="M12 12L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       <input class="cmd-input" type="text" placeholder="Search tasks, people, or type / for commands..." autocomplete="off" spellcheck="false" />
-      <div class="cmd-shortcut">
-        <kbd>⌘K</kbd>
-      </div>
     </div>
     <div class="cmd-results"></div>
     <div class="cmd-footer">
@@ -161,56 +158,11 @@
     else open();
   }
 
-  // ---- Show initial state (contextual suggestions + recents) ----
+  // ---- Show initial state (quick actions only) ----
   function showInitialState() {
     let html = '';
 
-    // Contextual suggestions based on selected node
-    const selectedTask = document.querySelector('.node--task.keyboard-focus, .node--task:hover');
-    if (selectedTask || contextNode) {
-      const node = selectedTask || contextNode;
-      const taskId = node.getAttribute('data-task');
-      const title = node.querySelector('.node-title')?.textContent?.trim();
-      const status = node.getAttribute('data-status');
-
-      html += '<div class="cmd-section-label">Suggestions</div>';
-      const suggestions = [];
-      if (status === 'red') {
-        suggestions.push({ emoji: '🔍', text: `What's blocking ${title}?`, query: `What's blocking ${title}?` });
-        suggestions.push({ emoji: '✏️', text: `Draft follow-up about ${title}`, query: `!draft follow-up about ${title}` });
-        suggestions.push({ emoji: '🔗', text: `Show dependency chain`, query: `Show dependencies for ${title}` });
-      } else if (status === 'amber') {
-        suggestions.push({ emoji: '⚠️', text: `What needs attention on ${title}?`, query: `What needs attention on ${title}?` });
-        suggestions.push({ emoji: '✏️', text: `Draft status update`, query: `!draft status update for ${title}` });
-      } else {
-        suggestions.push({ emoji: '📋', text: `Show details for ${title}`, query: title });
-        suggestions.push({ emoji: '📧', text: `Related communications`, query: `Show emails about ${title}` });
-      }
-      suggestions.push({ emoji: '📄', text: `Related documents`, query: `Show documents for ${title}` });
-
-      suggestions.forEach((s, i) => {
-        html += `<div class="cmd-result cmd-result--suggestion" data-index="${i}" data-query="${escapeHtml(s.query)}">
-          <span class="cmd-result-emoji">${s.emoji}</span>
-          <span class="cmd-result-text">${s.text}</span>
-        </div>`;
-      });
-      currentResults = suggestions.map(s => ({ type: 'suggestion', query: s.query }));
-    }
-
-    // Recent queries
-    if (recentQueries.length > 0) {
-      html += '<div class="cmd-section-label">Recent</div>';
-      const startIdx = currentResults.length;
-      recentQueries.slice(0, 5).forEach((q, i) => {
-        html += `<div class="cmd-result cmd-result--recent" data-index="${startIdx + i}" data-query="${escapeHtml(q)}">
-          <span class="cmd-result-emoji">🕐</span>
-          <span class="cmd-result-text">${escapeHtml(q)}</span>
-        </div>`;
-        currentResults.push({ type: 'recent', query: q });
-      });
-    }
-
-    // Quick actions
+    // Quick actions only — no suggestions, no recent
     html += '<div class="cmd-section-label">Quick Actions</div>';
     const quickIdx = currentResults.length;
     const quickActions = [
@@ -1024,14 +976,16 @@
     if (e.target === overlay) close();
   });
 
-  // Custom event from Commands button
+  // Custom event from Commands / Search button — toggles open/closed
   document.addEventListener('open-command-bar', (e) => {
-    open();
     if (e.detail?.prefill) {
+      open();
       requestAnimationFrame(() => {
         input.value = e.detail.prefill;
         handleInput();
       });
+    } else {
+      toggle();
     }
   });
 
@@ -1043,23 +997,19 @@
     }
   });
 
-  // ---- Add search trigger button in header ----
-  const searchBtn = document.createElement('button');
-  searchBtn.className = 'header-search-btn';
-  searchBtn.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-      <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M12 12L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <span>Search</span>
-    <kbd>⌘K</kbd>
-  `;
-  searchBtn.addEventListener('click', open);
+  // ---- Close answer panel on outside click ----
+  document.addEventListener('mousedown', (e) => {
+    if (
+      answerPanel.classList.contains('active') &&
+      !answerPanel.contains(e.target) &&
+      !bar.contains(e.target) &&
+      !overlay.contains(e.target)
+    ) {
+      closeAnswerPanel();
+    }
+  });
 
-  // Insert into header
-  const headerRight = document.querySelector('.header-right');
-  if (headerRight) {
-    headerRight.insertBefore(searchBtn, headerRight.firstChild);
-  }
+  // Expose for filter-bar search to restore displaced nodes
+  window.__clearSearchHighlights = clearSearchHighlights;
 
 })();
