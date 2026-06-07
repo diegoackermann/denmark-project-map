@@ -11,35 +11,227 @@ ______ __
 Created with Perplexity Computer
 https://www.perplexity.ai/computer
 -->
-<!-- Perplexity Computer Attribution — SEO Meta Tags -->
 <meta name="generator" content="Perplexity Computer">
 <meta name="author" content="Perplexity Computer">
 <meta property="og:see_also" content="https://www.perplexity.ai/computer">
 <link rel="author" href="https://www.perplexity.ai/computer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🇩🇰 Denmark — Project Overview</title>
-<!-- Fonts -->
+<title>&#127465;&#127472; Denmark - Project Overview</title>
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="command-bar.css">
+<style>
+.filter-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-8);
+  height: 40px;
+  overflow: visible;
+  position: relative;
+  z-index: 50;
+}
+.fdd { position: relative; flex-shrink: 0; }
+.fdd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 999px);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 180ms ease;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+.fdd-btn:hover, .fdd-btn.open {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text);
+}
+.fdd-btn.has-active {
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+}
+.fdd-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  opacity: 0.55;
+}
+.fdd-sep { width: 1px; height: 11px; background: currentColor; opacity: 0.2; flex-shrink: 0; }
+.fdd-val { font-size: 0.7rem; font-weight: 500; }
+.fdd-chevron { opacity: 0.4; flex-shrink: 0; transition: transform 180ms ease; }
+.fdd-btn.open .fdd-chevron { transform: rotate(180deg); }
+.fdd-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 6px;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 160px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  z-index: 200;
+}
+.fdd-menu.open { display: flex; }
+.fdd-menu .filter-chip {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  padding: 5px 10px;
+}
+.fbar-div {
+  width: 1px; height: 16px;
+  background: var(--color-border);
+  flex-shrink: 0; margin: 0 6px; opacity: 0.5;
+}
+.fbar-spacer { flex: 1; }
+.cmd-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: all 180ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cmd-bar-btn:hover {
+  background: var(--color-surface-3);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.cmd-bar-btn svg { opacity: 0.6; }
+.filter-chip--clear { font-size: 0.7rem; padding: 4px 10px; flex-shrink: 0; }
+
+/* ---- Inline filter-bar search ---- */
+.fbar-search {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 28px;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+.fbar-search:focus-within {
+  border-color: rgba(139,92,246,0.5);
+  background: rgba(139,92,246,0.08);
+}
+.fbar-search svg { opacity: 0.4; flex-shrink: 0; }
+.fbar-search input {
+  background: none;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 0.72rem;
+  font-family: inherit;
+}
+.fbar-search input::placeholder { opacity: 0.4; }
+.fbar-search input { width: 156px; }
+
+/* Autocomplete dropdown */
+.fbar-suggest {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface, #1a1a2e);
+  border: 1px solid var(--color-border, rgba(255,255,255,0.12));
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  z-index: 300;
+  overflow: hidden;
+  display: none;
+  min-width: 240px;
+}
+.fbar-suggest.open { display: block; }
+.fbar-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, rgba(255,255,255,0.7));
+  transition: background 100ms ease;
+}
+.fbar-suggest-item:hover,
+.fbar-suggest-item.active {
+  background: rgba(139,92,246,0.15);
+  color: var(--color-text, #fff);
+}
+.fbar-suggest-icon { font-size: 0.85rem; flex-shrink: 0; opacity: 0.8; }
+.fbar-suggest-main { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fbar-suggest-sub { font-size: 0.65rem; opacity: 0.5; flex-shrink: 0; }
+.fbar-suggest-status {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.fbar-suggest-status--green  { background: #22c55e; }
+.fbar-suggest-status--amber  { background: #f59e0b; }
+.fbar-suggest-status--red    { background: #ef4444; }
+.fbar-suggest-status--blue   { background: #3b82f6; }
+.fbar-suggest-section {
+  padding: 4px 12px 2px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.35;
+}
+.fbar-match {
+  background: none;
+  color: var(--color-accent, #8b5cf6);
+  font-weight: 700;
+}
+.fbar-suggest-noresults {
+  color: rgba(255,255,255,0.35);
+  font-style: italic;
+  cursor: default;
+  padding: 8px 12px;
+}
+.fbar-suggest-noresults span {
+  color: var(--color-accent, #8b5cf6);
+  cursor: pointer;
+  font-style: normal;
+  text-decoration: underline;
+}
+
+</style>
 </head>
 <body>
-<!-- Banner Edit Button (outside banner-area to avoid z-index stacking issues) -->
 <button class="banner-edit-btn" id="bannerEditBtn" title="Edit banner image">
 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
 <input type="file" id="bannerFileInput" accept="image/*" style="display:none" />
-<!-- Editable Flag Banner -->
 <div class="banner-area" id="bannerArea">
 <img class="banner-img" id="bannerImg" src="dk-flag-ribbon.jpg" alt="Denmark flag" draggable="false" />
-<!-- Edit mode toolbar -->
 <div class="banner-toolbar" id="bannerToolbar">
 <button class="banner-tool-btn" id="bannerUploadBtn" title="Upload new image">
 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 Upload
 </button>
-<span class="banner-tool-hint">Drag to position · Scroll to zoom</span>
+<span class="banner-tool-hint">Drag to position &middot; Scroll to zoom</span>
 <div class="banner-zoom-group">
 <button class="banner-zoom-btn" id="bannerZoomOut" title="Zoom out">&minus;</button>
 <span class="banner-zoom-level" id="bannerZoomLevel">100%</span>
@@ -48,14 +240,12 @@ Upload
 <button class="banner-tool-btn banner-tool-btn--done" id="bannerDoneBtn">Done</button>
 </div>
 </div>
-<!-- Header -->
 <header class="header">
 <div class="header-left">
 <h1 class="header-title">Project Overview</h1>
 <p class="header-subtitle">Real-time project status map</p>
 </div>
 <div class="header-center">
-<!-- Completion Ring -->
 <div class="completion-widget">
 <div class="completion-ring" id="completionRing">
 <svg viewBox="0 0 80 80" class="completion-svg">
@@ -81,80 +271,436 @@ Upload
 </button>
 </div>
 </header>
-<!-- Filter Bar -->
 <div class="filter-bar" id="filterBar">
-<div class="filter-group">
-<span class="filter-label">Status</span>
-<button class="filter-chip" data-filter="status" data-value="green"><span class="filter-dot filter-dot--green"></span>On Track</button>
-<button class="filter-chip" data-filter="status" data-value="amber"><span class="filter-dot filter-dot--amber"></span>Attention</button>
-<button class="filter-chip" data-filter="status" data-value="red"><span class="filter-dot filter-dot--red"></span>Blocked</button>
-<button class="filter-chip" data-filter="status" data-value="blue"><span class="filter-dot filter-dot--blue"></span>Completed</button>
+  <div class="fdd" id="fdd-status">
+    <button class="fdd-btn" data-group="status">
+      <span class="fdd-label">Status</span><span class="fdd-sep"></span>
+      <span class="fdd-val" id="fdd-val-status">All</span>
+      <svg class="fdd-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fdd-menu" id="fdd-menu-status">
+      <button class="filter-chip" data-filter="status" data-value="green"><span class="filter-dot filter-dot--green"></span>On Track</button>
+      <button class="filter-chip" data-filter="status" data-value="amber"><span class="filter-dot filter-dot--amber"></span>Attention</button>
+      <button class="filter-chip" data-filter="status" data-value="red"><span class="filter-dot filter-dot--red"></span>Blocked</button>
+      <button class="filter-chip" data-filter="status" data-value="blue"><span class="filter-dot filter-dot--blue"></span>Completed</button>
+    </div>
+  </div>
+  <div class="fbar-div"></div>
+  <div class="fdd" id="fdd-workstream">
+    <button class="fdd-btn" data-group="workstream">
+      <span class="fdd-label">Workstream</span><span class="fdd-sep"></span>
+      <span class="fdd-val" id="fdd-val-workstream">All</span>
+      <svg class="fdd-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fdd-menu" id="fdd-menu-workstream">
+      <button class="filter-chip" data-filter="workstream" data-value="negotiation">&#129309; Negotiation</button>
+      <button class="filter-chip" data-filter="workstream" data-value="technical">&#9881;&#65039; Technical</button>
+      <button class="filter-chip" data-filter="workstream" data-value="legal">&#9878;&#65039; Legal</button>
+      <button class="filter-chip" data-filter="workstream" data-value="documents">&#128196; Documents</button>
+      <button class="filter-chip" data-filter="workstream" data-value="comms">&#128172; Comms</button>
+    </div>
+  </div>
+  <div class="fbar-div"></div>
+  <div class="fdd" id="fdd-focus">
+    <button class="fdd-btn" data-group="focus">
+      <span class="fdd-label">Focus</span><span class="fdd-sep"></span>
+      <span class="fdd-val" id="fdd-val-focus">All</span>
+      <svg class="fdd-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fdd-menu" id="fdd-menu-focus">
+      <button class="filter-chip" data-filter="focus" data-value="needs-action">&#127919; Needs My Action</button>
+      <button class="filter-chip" data-filter="focus" data-value="overdue">&#9200; Overdue</button>
+      <button class="filter-chip" data-filter="focus" data-value="has-dependencies">&#128279; Has Dependencies</button>
+    </div>
+  </div>
+  <div class="fbar-div"></div>
+  <div class="fbar-search" id="fbarSearch" title="Search tasks">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+      <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input type="text" id="fbarSearchInput" placeholder="Search…" autocomplete="off" spellcheck="true" />
+    <div class="fbar-suggest" id="fbarSuggest"></div>
+  </div>
+  <div class="fbar-spacer"></div>
+  <button class="filter-chip filter-chip--clear" id="clearFilters">&#10005; Clear</button>
+  <div class="fbar-div"></div>
+  <button class="cmd-bar-btn" id="cmdBarBtn" title="Open command bar">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
+    Commands
+  </button>
 </div>
-<div class="filter-divider"></div>
-<div class="filter-group">
-<span class="filter-label">Workstream</span>
-<button class="filter-chip" data-filter="workstream" data-value="negotiation">🤝 Negotiation</button>
-<button class="filter-chip" data-filter="workstream" data-value="technical">⚙️ Technical</button>
-<button class="filter-chip" data-filter="workstream" data-value="legal">⚖️ Legal</button>
-<button class="filter-chip" data-filter="workstream" data-value="documents">📄 Documents</button>
-<button class="filter-chip" data-filter="workstream" data-value="comms">💬 Comms</button>
+<!-- Hidden assignee elements required by app.js (do not remove) -->
+<div style="display:none" aria-hidden="true">
+  <div id="assigneeSearchWrapper">
+    <input id="assigneeSearchInput" type="text" />
+    <div id="assigneeResults"></div>
+  </div>
+  <div id="assigneeActiveTags"></div>
 </div>
-<div class="filter-divider"></div>
-<div class="filter-group filter-group--assignee">
-<span class="filter-label">Assignee</span>
-<div class="assignee-search-wrapper" id="assigneeSearchWrapper">
-<svg class="assignee-search-icon" width="13" height="13" viewBox="0 0 18 18" fill="none">
-<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-<path d="M12 12L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-</svg>
-<input class="assignee-search-input" id="assigneeSearchInput" type="text" placeholder="Search people..." autocomplete="off" spellcheck="false" />
-<div class="assignee-results" id="assigneeResults"></div>
-</div>
-<!-- Active assignee tags shown here -->
-<div class="assignee-active-tags" id="assigneeActiveTags"></div>
-</div>
-<div class="filter-divider"></div>
-<div class="filter-group">
-<span class="filter-label">Focus</span>
-<button class="filter-chip" data-filter="focus" data-value="needs-action">🎯 Needs My Action</button>
-<button class="filter-chip" data-filter="focus" data-value="overdue">⏰ Overdue</button>
-<button class="filter-chip" data-filter="focus" data-value="has-dependencies">🔗 Has Dependencies</button>
-</div>
-<div class="filter-divider"></div>
-<button class="filter-chip filter-chip--clear" id="clearFilters">✕ Clear All</button>
-</div>
-<!-- Main map area -->
 <main class="map-viewport" id="mapViewport">
 <div class="map-container" id="mapContainer">
 <svg class="connections-svg" id="connectionsSvg"></svg>
-<!-- All nodes are positioned absolutely by JS -->
 </div>
 </main>
-<!-- Detail Panel (slide-out) -->
 <div class="detail-panel" id="detailPanel">
 <button class="detail-panel-close" id="detailClose" aria-label="Close panel">&times;</button>
 <div class="detail-panel-content" id="detailContent"></div>
 </div>
 <div class="detail-overlay" id="detailOverlay"></div>
-<!-- Activity Feed Panel -->
 <div class="activity-feed" id="activityFeed">
 <div class="activity-feed-header">
 <h3 class="activity-feed-title">Activity</h3>
 <span class="activity-feed-subtitle">Recent changes</span>
 <button class="activity-feed-close" id="activityFeedClose" aria-label="Close activity feed">&times;</button>
 </div>
-<div class="activity-feed-list" id="activityFeedList">
-<!-- Populated by JS -->
-</div>
+<div class="activity-feed-list" id="activityFeedList"></div>
 </div>
 <div class="activity-feed-backdrop" id="activityFeedBackdrop"></div>
-<!-- Footer -->
 <footer class="footer">
-<a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
-Created with Perplexity Computer
-</a>
+<a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
 </footer>
 <script src="app.js"></script>
 <script src="command-bar.js"></script>
+<script>
+(function() {
+  var ddGroups = ['status','workstream','focus'];
+  ddGroups.forEach(function(g) {
+    var btn = document.querySelector('.fdd-btn[data-group="'+g+'"]');
+    var menu = document.getElementById('fdd-menu-'+g);
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = menu.classList.contains('open');
+      closeAll();
+      if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
+    });
+  });
+  function closeAll() {
+    document.querySelectorAll('.fdd-menu.open').forEach(function(m){ m.classList.remove('open'); });
+    document.querySelectorAll('.fdd-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  }
+  document.addEventListener('click', closeAll);
+  document.addEventListener('click', function(e) {
+    var chip = e.target.closest && e.target.closest('.filter-chip[data-filter]');
+    if (!chip) return;
+    var ft = chip.dataset.filter;
+    var valEl = document.getElementById('fdd-val-'+ft);
+    var btn = document.querySelector('.fdd-btn[data-group="'+ft+'"]');
+    if (!valEl) return;
+    setTimeout(function() {
+      var active = document.querySelectorAll('.filter-chip[data-filter="'+ft+'"].active');
+      if (active.length === 0) {
+        valEl.textContent = 'All';
+        btn && btn.classList.remove('has-active');
+      } else if (active.length === 1) {
+        var txt = active[0].textContent.trim().replace(/^[\W]+/, '').trim();
+        valEl.textContent = txt.length > 12 ? txt.substring(0,11)+'\u2026' : txt;
+        btn && btn.classList.add('has-active');
+      } else {
+        valEl.textContent = active.length + ' selected';
+        btn && btn.classList.add('has-active');
+      }
+    }, 20);
+  });
+  // Expose global reset for app.js to call after navigateToCountry()
+  window.__resetFilterBar = function() {
+    ['status','workstream','focus'].forEach(function(g) {
+      var valEl = document.getElementById('fdd-val-'+g);
+      var btn = document.querySelector('.fdd-btn[data-group="'+g+'"]');
+      if (valEl) valEl.textContent = 'All';
+      if (btn) btn.classList.remove('has-active');
+    });
+    closeAll();
+  };
+
+  var cmdBtn = document.getElementById('cmdBarBtn');
+  if (cmdBtn) {
+    cmdBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.dispatchEvent(new CustomEvent('open-command-bar'));
+    });
+  }
+
+  // ---- Autocomplete search ----
+  (function() {
+    var inp = document.getElementById('fbarSearchInput');
+    var sug = document.getElementById('fbarSuggest');
+    if (!inp || !sug) return;
+
+    var activeIdx = -1;
+    var items = [];
+
+    var STATUS_COLOR = {
+      green:'green', amber:'amber', red:'red', blue:'blue',
+      'on track':'green', 'blocked':'red', 'attention needed':'amber', 'completed':'blue'
+    };
+
+    // ---- Build search data from live DOM ----
+    function buildData() {
+      var data = [];
+
+      // Tasks
+      document.querySelectorAll('.node--task').forEach(function(el) {
+        var title  = (el.querySelector('.node-title')    || {}).textContent || '';
+        var assign = (el.querySelector('.node-assignee') || {}).textContent || '';
+        var status = (el.getAttribute('data-status')     || '').toLowerCase();
+        var wsId   = el.getAttribute('data-workstream')  || '';
+        var taskId = el.getAttribute('data-task')        || '';
+        var wsEl   = document.querySelector('.node--workstream[data-workstream="'+wsId+'"]');
+        var wsEmoji = wsEl ? ((wsEl.querySelector('.node-emoji')||{}).textContent||'') : '';
+        var wsTitle = wsEl ? ((wsEl.querySelector('.node-title')||{}).textContent||'') : wsId;
+        data.push({
+          type:'task', title:title.trim(), assign:assign.trim(),
+          status:status, wsEmoji:wsEmoji.trim(), wsTitle:wsTitle.trim(),
+          taskEl:el, taskId:taskId,
+          key:(title+' '+assign+' '+wsTitle+' '+status).toLowerCase()
+        });
+      });
+
+      // Workstreams
+      document.querySelectorAll('.node--workstream').forEach(function(el) {
+        var emoji = (el.querySelector('.node-emoji')||{}).textContent||'';
+        var title = (el.querySelector('.node-title')  ||{}).textContent||'';
+        var wsId  = el.getAttribute('data-workstream')||'';
+        data.push({
+          type:'workstream', title:title.trim(), emoji:emoji.trim(),
+          wsId:wsId, el:el, key:title.toLowerCase()
+        });
+      });
+
+      // (Assignee/People category intentionally removed from search results)
+
+      // Slash commands
+      [
+        { title:'/status',    sub:'Project status summary', icon:'📊' },
+        { title:'/risks',     sub:'Risks & blockers',       icon:'🚨' },
+        { title:'/blocked',   sub:'Blocked tasks',          icon:'🔴' },
+        { title:'/deadlines', sub:'Upcoming deadlines',     icon:'📅' },
+        { title:'/people',    sub:'Team overview',          icon:'👥' },
+        { title:'/draft',     sub:'Draft a message',        icon:'✏️'  },
+      ].forEach(function(c){ data.push({ type:'cmd', title:c.title, sub:c.sub, icon:c.icon, key:c.title+' '+c.sub }); });
+
+      return data;
+    }
+
+    // ---- Fuzzy score ----
+    function score(key, q) {
+      if (!q) return 0;
+      var lk = key.toLowerCase(), lq = q.toLowerCase();
+      if (lk.startsWith(lq))  return 200;
+      if (lk.includes(lq))    return 100 - lk.indexOf(lq);
+      var words = lq.split(/\s+/).filter(Boolean);
+      if (words.length > 1 && words.every(function(w){ return lk.includes(w); })) return 60;
+      // partial 3-char prefix match per word
+      var hits = words.filter(function(w){ return w.length>=3 && lk.includes(w.substring(0,3)); });
+      return hits.length ? 25 : 0;
+    }
+
+    function search(q) {
+      if (!q || q.length < 1) return [];
+      var data = buildData();
+      var scored = [];
+      data.forEach(function(d) {
+        var s = score(d.key || '', q);
+        if (s > 0) scored.push({ d:d, s:s });
+      });
+      scored.sort(function(a,b){ return b.s - a.s; });
+      return scored.slice(0, 8).map(function(x){ return x.d; });
+    }
+
+    // ---- Highlight matching text ----
+    function hl(text, q) {
+      if (!q || !text) return escHtml(text || '');
+      var safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      try {
+        return escHtml(text).replace(
+          new RegExp('(' + safe + ')', 'gi'),
+          '<mark class="fbar-match">$1</mark>'
+        );
+      } catch(e) { return escHtml(text); }
+    }
+
+    function escHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ---- Render suggestions ----
+    function render(results, q) {
+      activeIdx = -1;
+      // IMPORTANT: items order must match render order (tasks, then streams, then cmds)
+      // so that data-idx on each row corresponds to the correct item
+      var tasks  = results.filter(function(r){ return r.type==='task'; });
+      var wss    = results.filter(function(r){ return r.type==='workstream'; });
+      var cmds   = results.filter(function(r){ return r.type==='cmd'; });
+      items = tasks.concat(wss).concat(cmds);
+
+      if (!results.length) {
+        sug.innerHTML =
+          '<div class="fbar-suggest-item fbar-suggest-noresults">' +
+          'No results · <span id="fbarOpenCmd">Search in command bar →</span>' +
+          '</div>';
+        sug.classList.add('open');
+        var link = document.getElementById('fbarOpenCmd');
+        if (link) link.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          var val = inp.value.trim();
+          inp.value = ''; sug.classList.remove('open');
+          document.dispatchEvent(new CustomEvent('open-command-bar', { detail:{ prefill: val } }));
+        });
+        return;
+      }
+
+      var html = '';
+      var idx  = 0;
+
+      function row(r) {
+        var i = idx++;
+        var cls = 'fbar-suggest-item';
+        if (r.type === 'task') {
+          var col = STATUS_COLOR[r.status] || 'green';
+          return '<div class="'+cls+'" data-idx="'+i+'">' +
+            '<span class="fbar-suggest-icon">'+r.wsEmoji+'</span>' +
+            '<span class="fbar-suggest-main">'+hl(r.title,q)+'</span>' +
+            '<span class="fbar-suggest-sub">'+hl(r.assign,q)+'</span>' +
+            '<span class="fbar-suggest-status fbar-suggest-status--'+col+'"></span>' +
+            '</div>';
+        } else if (r.type === 'workstream') {
+          return '<div class="'+cls+'" data-idx="'+i+'">' +
+            '<span class="fbar-suggest-icon">'+r.emoji+'</span>' +
+            '<span class="fbar-suggest-main">'+hl(r.title,q)+'</span>' +
+            '<span class="fbar-suggest-sub">Stream</span>' +
+            '</div>';
+
+        } else {
+          return '<div class="'+cls+'" data-idx="'+i+'">' +
+            '<span class="fbar-suggest-icon">'+r.icon+'</span>' +
+            '<span class="fbar-suggest-main">'+hl(r.title,q)+'</span>' +
+            '<span class="fbar-suggest-sub">'+hl(r.sub,q)+'</span>' +
+            '</div>';
+        }
+      }
+
+      if (tasks.length)  { html += '<div class="fbar-suggest-section">Tasks</div>';     tasks.forEach(function(r){ html+=row(r); }); }
+      if (wss.length)    { html += '<div class="fbar-suggest-section">Streams</div>';   wss.forEach(function(r){ html+=row(r); }); }
+
+      if (cmds.length)   { html += '<div class="fbar-suggest-section">Commands</div>';  cmds.forEach(function(r){ html+=row(r); }); }
+
+      sug.innerHTML = html;
+      sug.classList.add('open');
+    }
+
+    // ---- Full search reset (clear input, close dropdown, restore map) ----
+    function resetSearch() {
+      inp.value = '';
+      sug.classList.remove('open');
+      activeIdx = -1;
+      items = [];
+      if (typeof window.__clearSearchHighlights === 'function') {
+        window.__clearSearchHighlights();
+      }
+    }
+
+    // ---- Navigate to selected item ----
+    function selectItem(r) {
+      resetSearch();
+      inp.blur();
+      if (!r) return;
+
+      if (r.type === 'task') {
+        // Block the map click during node repositioning
+        window.__blockMapClick = true;
+        setTimeout(function() { window.__blockMapClick = false; }, 350);
+        // 1. Navigate to workstream (shows task in correct context, no map movement)
+        if (r.taskEl) {
+          var wsId = r.taskEl.getAttribute('data-workstream');
+          if (wsId && typeof window.navigateToWorkstream === 'function') {
+            window.navigateToWorkstream(wsId);
+          }
+        }
+        // 2. Open detail panel (no panToNode — map stays still)
+        setTimeout(function() {
+          if (typeof window.openPanel === 'function') {
+            window.openPanel(r.taskId);
+          }
+        }, 60);
+
+      } else if (r.type === 'workstream') {
+        // Block the map click that fires after mousedown (nodes reposition under cursor)
+        window.__blockMapClick = true;
+        setTimeout(function() { window.__blockMapClick = false; }, 350);
+        // Navigate to workstream — identical to clicking the bubble in the map
+        if (typeof window.navigateToWorkstream === 'function') {
+          window.navigateToWorkstream(r.wsId);
+        }
+
+
+      } else if (r.type === 'cmd') {
+        document.dispatchEvent(new CustomEvent('open-command-bar', {
+          detail: { prefill: r.title }
+        }));
+      }
+    }
+
+    // ---- Input events ----
+    inp.addEventListener('input', function() {
+      var q = inp.value.trim();
+      if (!q) { sug.classList.remove('open'); return; }
+      render(search(q), q);
+    });
+
+    inp.addEventListener('keydown', function(e) {
+      var rows = sug.querySelectorAll('.fbar-suggest-item:not(.fbar-suggest-noresults)');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, rows.length - 1);
+        rows.forEach(function(r, i){ r.classList.toggle('active', i === activeIdx); });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, -1);
+        rows.forEach(function(r, i){ r.classList.toggle('active', i === activeIdx); });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIdx >= 0 && items[activeIdx]) {
+          selectItem(items[activeIdx]);
+        } else if (inp.value.trim()) {
+          var q = inp.value.trim();
+          inp.value = ''; sug.classList.remove('open');
+          document.dispatchEvent(new CustomEvent('open-command-bar', { detail:{ prefill: q } }));
+        }
+      } else if (e.key === 'Escape') {
+        resetSearch(); inp.blur();
+      }
+    });
+
+    sug.addEventListener('mousedown', function(e) {
+      var r = e.target.closest('.fbar-suggest-item:not(.fbar-suggest-noresults)');
+      if (!r) return;
+      e.preventDefault();
+      var idx = parseInt(r.getAttribute('data-idx'), 10);
+      if (!isNaN(idx)) selectItem(items[idx]);
+    });
+
+    // Close + full reset on outside click
+    document.addEventListener('mousedown', function(e) {
+      var wrap = document.getElementById('fbarSearch');
+      if (wrap && !wrap.contains(e.target) && sug.classList.contains('open')) {
+        resetSearch();
+      }
+    });
+
+    // Keyboard shortcut: "/" when not in a text field → focus search bar
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== '/') return;
+      var tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      inp.focus();
+      inp.select();
+    });
+
+  })();
+})();
+</script>
 </body>
 </html>
