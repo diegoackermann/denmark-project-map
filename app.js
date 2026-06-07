@@ -604,7 +604,7 @@
   // Central node
   const centralEl = makeNode('node--central', `
     <span class="node-flag">🇩🇰</span>
-    <span class="node-title">Denmark — Danish OI</span>
+    <span class="node-title">Denmark - Danish OI</span>
     <span class="status-badge status-badge--phase">Implementation Phase</span>
   `, 0);
 
@@ -652,9 +652,11 @@
 
   // ---- Layout ----
   function layout() {
-    const rect = container.getBoundingClientRect();
-    const W = rect.width;
-    const H = rect.height;
+    // Use offsetWidth/Height — the un-transformed container size.
+    // (getBoundingClientRect returns zoom-scaled values, which corrupts
+    // every position when the map is zoomed.)
+    const W = container.offsetWidth || container.scrollWidth;
+    const H = container.offsetHeight || container.scrollHeight;
     const cx = W / 2;
     const cy = H / 2;
 
@@ -780,6 +782,7 @@
     opts = opts || {};
     const data = TASK_DATA[taskId];
     if (!data) return;
+    hideTooltip();
     currentTask = taskId;
     panelOpen = true;
 
@@ -1052,6 +1055,15 @@
       });
     }
 
+    // ESC hint footer
+    let escHint = detailPanel.querySelector('.detail-esc-hint');
+    if (!escHint) {
+      escHint = document.createElement('div');
+      escHint.className = 'detail-esc-hint';
+      escHint.innerHTML = '<kbd>ESC</kbd> to close';
+      detailPanel.appendChild(escHint);
+    }
+
     detailPanel.classList.add('active');
 
     // If opened from the AI answer panel (opts.fromAnswer), skip overlay so both panels coexist
@@ -1077,6 +1089,23 @@
 
   // Expose openPanel globally so command-bar.js can call it
   window.openPanel = openPanel;
+  // Expose navigation helpers for the filter-bar search
+  window.navigateToWorkstream = navigateToWorkstream;
+  window.panToNode = function(el) {
+    if (!el) return;
+    const vpEl = document.getElementById('mapViewport');
+    if (!vpEl) return;
+    const vpRect = vpEl.getBoundingClientRect();
+    const nRect  = el.getBoundingClientRect();
+    const nodeCX = nRect.left + nRect.width  / 2;
+    const nodeCY = nRect.top  + nRect.height / 2;
+    const vpCX   = vpRect.left + vpRect.width  / 2;
+    const vpCY   = vpRect.top  + vpRect.height / 2;
+    panX += (vpCX - nodeCX);
+    panY += (vpCY - nodeCY);
+    clampPan();
+    applyTransform();
+  };
 
   // ---- Action Workspace Panel ----
   function showActionWorkspacePanel(action, todo, taskData) {
@@ -1762,11 +1791,23 @@
     if (aInput) aInput.value = '';
     if (aTags) aTags.innerHTML = '';
     if (aResults) aResults.classList.remove('open');
+
+    // Safety: if originalPositions is missing or stale, rebuild from layout()
+    // This can happen when storeOriginalPositions() ran while tasks were filtered.
+    const firstOrig = originalPositions.values().next().value;
+    if (originalPositions.size === 0 || !firstOrig || !firstOrig.left) {
+      originalPositions.clear();
+      layout();
+      storeOriginalPositions();
+    }
+
     applyFilters();
     navLevel = 0;
     navWorkstream = null;
     navTask = null;
     updateBreadcrumb();
+    // Reset filter bar dropdown labels
+    if (typeof window.__resetFilterBar === 'function') window.__resetFilterBar();
   }
 
   function navigateToWorkstream(wsId) {
@@ -1925,9 +1966,9 @@
     const hasFilters = activeFilters.size > 0;
     clearFiltersBtn.classList.toggle('visible', hasFilters);
 
-    const rect = container.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    // Un-transformed container size (getBoundingClientRect is zoom-scaled)
+    const centerX = (container.offsetWidth || container.scrollWidth) / 2;
+    const centerY = (container.offsetHeight || container.scrollHeight) / 2;
 
     if (originalPositions.size === 0) storeOriginalPositions();
 
@@ -1966,6 +2007,7 @@
 
       centralEl.classList.remove('dimmed', 'highlighted');
       updateMiniMap();
+      redrawLines();
       return;
     }
 
@@ -2054,6 +2096,22 @@
     navigateToCountry();
   });
 
+  // ---- Focus filter chip tooltips ----
+  const focusTooltips = {
+    'needs-action': 'Tasks waiting on your input, approval, or response',
+    'overdue':      'Tasks past their due date',
+    'has-dependencies': 'Tasks that are blocked by or blocking other tasks'
+  };
+  document.querySelectorAll('.filter-chip[data-filter="focus"]').forEach(chip => {
+    const hint = focusTooltips[chip.dataset.value];
+    if (!hint) return;
+    chip.addEventListener('mouseenter', (e) => {
+      showTooltip(e, `<div class="tt-hint" style="font-size:12px;max-width:200px">${hint}</div>`);
+    });
+    chip.addEventListener('mousemove', positionTooltip);
+    chip.addEventListener('mouseleave', hideTooltip);
+  });
+
   // ---- Events: Click handling ----
   // Track if the mousedown was a drag vs a click
   let clickStartX = 0, clickStartY = 0;
@@ -2070,13 +2128,16 @@
     // Skip if we just finished dragging a node
     if (nodeDragOccurred) return;
 
+    // Block task/ws clicks briefly after a search selection (nodes reposition under cursor)
+    if (window.__blockMapClick) return;
+
     // Task node click → open detail panel
     const taskNode = e.target.closest('.node--task');
     if (taskNode) {
       const taskId = taskNode.getAttribute('data-task');
       const wsId = taskNode.getAttribute('data-workstream');
       if (panelOpen && currentTask === taskId) {
-        closePanel();
+        navigateToCountry();
       } else {
         if (wsId) navWorkstream = wsId;
         openPanel(taskId);
@@ -2106,7 +2167,7 @@
       return;
     }
 
-    // Click on empty space → go all the way back to country view
+    // Click on empty space → full map reset (zoom out, restore all positions)
     if (navLevel > 0) {
       navigateToCountry();
     }
@@ -2119,8 +2180,8 @@
   });
 
   // Detail panel close
-  detailClose.addEventListener('click', closePanel);
-  detailOverlay.addEventListener('click', closePanel);
+  detailClose.addEventListener('click', function() { navigateToCountry(); });
+  detailOverlay.addEventListener('click', function() { navigateToCountry(); });
 
   // ---- Keyboard Navigation ----
   let focusedNodeIndex = -1;
@@ -2142,7 +2203,7 @@
         return;
       }
       if (panelOpen) {
-        closePanel();
+        navigateToCountry();
       } else {
         navigateBack();
       }
@@ -2221,11 +2282,23 @@
     }, 100);
   }
 
+  // Hub hover — show "click to reset" hint when filtered
+  centralEl.addEventListener('mouseenter', (e) => {
+    if (navLevel > 0) {
+      showTooltip(e, `<div class="tt-hint" style="font-size:12px">Click to return to full map</div>`);
+    }
+  });
+  centralEl.addEventListener('mousemove', positionTooltip);
+  centralEl.addEventListener('mouseleave', hideTooltip);
+
   // Workstream hover
   wsEls.forEach((el, i) => {
     const ws = WORKSTREAMS[i];
     const counts = { green: 0, amber: 0, red: 0, blue: 0 };
     ws.tasks.forEach(t => counts[t.status]++);
+    const total = ws.tasks.length;
+    const done = counts.blue;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
     el.addEventListener('mouseenter', (e) => {
       showTooltip(e, `
@@ -2236,7 +2309,8 @@
           ${counts.red > 0 ? `<span class="tt-stat"><span class="tt-dot tt-dot--red"></span>${counts.red} Blocked</span>` : ''}
           ${counts.blue > 0 ? `<span class="tt-stat"><span class="tt-dot tt-dot--blue"></span>${counts.blue} Done</span>` : ''}
         </div>
-        <div class="tt-hint">Click to filter</div>
+        <div class="tt-hint" style="margin-bottom:4px">${done} of ${total} tasks complete (${pct}%)</div>
+        <div class="tt-hint">Click to focus</div>
       `);
     });
     el.addEventListener('mousemove', positionTooltip);
@@ -2318,9 +2392,12 @@
     const canvas = document.getElementById('miniMapCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const rect = container.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Un-transformed container size (getBoundingClientRect is zoom-scaled)
+    const cw = container.offsetWidth || container.scrollWidth;
+    const ch = container.offsetHeight || container.scrollHeight;
+    if (!cw || !ch) return;
+    const scaleX = canvas.width / cw;
+    const scaleY = canvas.height / ch;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -2328,33 +2405,55 @@
     ctx.fillStyle = 'rgba(19, 18, 16, 0.9)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw connections
+    // Rendered (mid-animation) position of a node, scaled to mini-map space
+    const rPos = (el) => {
+      const cs = getComputedStyle(el);
+      return {
+        x: (parseFloat(cs.left) || 0) * scaleX,
+        y: (parseFloat(cs.top) || 0) * scaleY
+      };
+    };
+
+    const c = rPos(centralEl);
+
+    // Hub → Stream connections
     ctx.strokeStyle = 'rgba(79, 152, 163, 0.2)';
     ctx.lineWidth = 0.5;
-    const cxM = parseFloat(centralEl.style.left) * scaleX;
-    const cyM = parseFloat(centralEl.style.top) * scaleY;
-
+    const wsPts = [];
     wsEls.forEach(el => {
-      const wx = parseFloat(el.style.left) * scaleX;
-      const wy = parseFloat(el.style.top) * scaleY;
+      const w = rPos(el);
+      wsPts.push(w);
       ctx.beginPath();
-      ctx.moveTo(cxM, cyM);
-      ctx.lineTo(wx, wy);
+      ctx.moveTo(c.x, c.y);
+      ctx.lineTo(w.x, w.y);
+      ctx.stroke();
+    });
+
+    // Stream → Task connections
+    ctx.strokeStyle = 'rgba(79, 152, 163, 0.12)';
+    taskEls.forEach(tn => {
+      if (tn.el.classList.contains('collapsed-hidden')) return;
+      const w = wsPts[tn.wsIndex];
+      if (!w) return;
+      const t = rPos(tn.el);
+      ctx.beginPath();
+      ctx.moveTo(w.x, w.y);
+      ctx.lineTo(t.x, t.y);
       ctx.stroke();
     });
 
     // Draw central
     ctx.fillStyle = 'rgba(79, 152, 163, 0.8)';
     ctx.beginPath();
-    ctx.arc(cxM, cyM, 4, 0, Math.PI * 2);
+    ctx.arc(c.x, c.y, 4, 0, Math.PI * 2);
     ctx.fill();
 
     // Draw workstreams
-    wsEls.forEach(el => {
+    wsEls.forEach((el, i) => {
       const dimmed = el.classList.contains('dimmed');
       ctx.fillStyle = dimmed ? 'rgba(79, 152, 163, 0.15)' : 'rgba(79, 152, 163, 0.6)';
       ctx.beginPath();
-      ctx.arc(parseFloat(el.style.left) * scaleX, parseFloat(el.style.top) * scaleY, 3, 0, Math.PI * 2);
+      ctx.arc(wsPts[i].x, wsPts[i].y, 3, 0, Math.PI * 2);
       ctx.fill();
     });
 
@@ -2367,13 +2466,33 @@
     };
 
     taskEls.forEach(tn => {
+      if (tn.el.classList.contains('collapsed-hidden')) return;
       const dimmed = tn.el.classList.contains('dimmed');
       const status = tn.el.getAttribute('data-status');
+      const t = rPos(tn.el);
       ctx.fillStyle = dimmed ? 'rgba(90, 89, 87, 0.2)' : (statusColors[status] || 'rgba(224, 223, 221, 0.5)');
       ctx.beginPath();
-      ctx.arc(parseFloat(tn.el.style.left) * scaleX, parseFloat(tn.el.style.top) * scaleY, 2, 0, Math.PI * 2);
+      ctx.arc(t.x, t.y, 2, 0, Math.PI * 2);
       ctx.fill();
     });
+
+    // Viewport rectangle — the slice of the map currently on screen.
+    // Container transform: translate(panX, panY) scale(zoom), origin center.
+    // Inverse-map the screen corners into map space.
+    if (typeof zoom === 'number' && zoom > 0) {
+      const vx = cw / 2 + (0 - panX - cw / 2) / zoom;
+      const vy = ch / 2 + (0 - panY - ch / 2) / zoom;
+      const vw = cw / zoom;
+      const vh = ch / zoom;
+      ctx.strokeStyle = 'rgba(224, 223, 221, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        vx * scaleX + 0.5,
+        vy * scaleY + 0.5,
+        Math.max(2, vw * scaleX - 1),
+        Math.max(2, vh * scaleY - 1)
+      );
+    }
   }
 
   // ---- Assignee search filter ----
@@ -2624,35 +2743,39 @@
     applyTransform();
   };
 
-  // ---- Commands button (visible trigger for slash commands) ----
-  const cmdGroup = document.createElement('div');
-  cmdGroup.className = 'filter-group';
-  cmdGroup.style.marginLeft = 'auto';
-  const cmdLabel = document.createElement('span');
-  cmdLabel.className = 'filter-label';
-  cmdLabel.textContent = 'Commands';
-  const cmdBtn = document.createElement('button');
-  cmdBtn.className = 'commands-trigger';
-  cmdBtn.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M4 6h8M4 10h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <span>Open</span>
-    <kbd>/</kbd>
-  `;
-  cmdBtn.addEventListener('click', () => {
-    document.dispatchEvent(new CustomEvent('open-command-bar', { detail: { prefill: '/' } }));
-  });
-  cmdGroup.appendChild(cmdLabel);
-  cmdGroup.appendChild(cmdBtn);
-  const filterBar = document.getElementById('filterBar');
-  if (filterBar) {
-    // Add a divider before commands
-    const div = document.createElement('div');
-    div.className = 'filter-divider';
-    filterBar.appendChild(div);
-    filterBar.appendChild(cmdGroup);
-  }
+  // ---- Mini-map navigation (click or drag to move around the map) ----
+  (function initMiniMapNav() {
+    const canvas = document.getElementById('miniMapCanvas');
+    if (!canvas) return;
+    canvas.style.cursor = 'pointer';
+    canvas.title = 'Click or drag to navigate';
+    let mmDragging = false;
+
+    function panFromMiniMap(e) {
+      const r = canvas.getBoundingClientRect();
+      const cw = container.offsetWidth || container.scrollWidth;
+      const ch = container.offsetHeight || container.scrollHeight;
+      // Mini-map pixel → map coordinate → pan that centers it on screen
+      const px = (e.clientX - r.left) / r.width * cw;
+      const py = (e.clientY - r.top) / r.height * ch;
+      panX = -(px - cw / 2) * zoom;
+      panY = -(py - ch / 2) * zoom;
+      clampPan();
+      applyTransform();
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      mmDragging = true;
+      panFromMiniMap(e);
+      e.stopPropagation();
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (mmDragging) panFromMiniMap(e);
+    });
+    window.addEventListener('mouseup', () => { mmDragging = false; });
+  })();
+
 
   // ---- Re-store positions on resize ----
   window.addEventListener('resize', () => {
@@ -2878,6 +3001,88 @@
       });
     });
   }
+
+  // ---- Live Connector Sync ----
+  // Bubbles glide to new positions via slow CSS transitions, but connectors
+  // used to be redrawn instantly at the destination — so they pointed at empty
+  // space while bubbles were still moving (and stayed wrong after filtering).
+  // This loop watches the bubbles' actual rendered positions every frame and
+  // keeps the connector endpoints (and the mini-map) glued to them.
+  function setLinePath(path, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const curvature = len * 0.1;
+    const nx = -dy / len * curvature;
+    const ny = dx / len * curvature;
+    path.setAttribute('d', `M ${x1} ${y1} Q ${mx + nx} ${my + ny} ${x2} ${y2}`);
+  }
+
+  function renderedPos(el) {
+    const cs = getComputedStyle(el);
+    return { x: parseFloat(cs.left) || 0, y: parseFloat(cs.top) || 0 };
+  }
+
+  function syncLinesToRendered() {
+    const cw = container.offsetWidth || container.scrollWidth;
+    const ch = container.offsetHeight || container.scrollHeight;
+    svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
+
+    const needed = new Set();
+    const upsert = (x1, y1, x2, y2, cls, lineId) => {
+      needed.add(lineId);
+      let path = svg.querySelector(`[data-line-id="${lineId}"]`);
+      if (!path) {
+        addLine(svg, x1, y1, x2, y2, cls, lineId);
+      } else {
+        // Update in place so dash-flow animations keep running smoothly
+        setLinePath(path, x1, y1, x2, y2);
+      }
+    };
+
+    const c = renderedPos(centralEl);
+    wsEls.forEach((el, i) => {
+      const ws = WORKSTREAMS[i];
+      const w = renderedPos(el);
+      upsert(c.x, c.y, w.x, w.y, 'connection-line--primary', 'line-c-ws-' + ws.id);
+      ws.tasks.forEach((task, ti) => {
+        const tn = taskEls.find(t => t.wsIndex === i && t.taskIndex === ti);
+        if (tn && !tn.el.classList.contains('collapsed-hidden')) {
+          const p = renderedPos(tn.el);
+          upsert(w.x, w.y, p.x, p.y, 'connection-line--secondary', 'line-ws-' + ws.id + '-task-' + task.id);
+        }
+      });
+    });
+
+    // Remove connectors whose task is hidden (collapsed)
+    svg.querySelectorAll('[data-line-id]').forEach(p => {
+      if (!needed.has(p.getAttribute('data-line-id'))) p.remove();
+    });
+  }
+
+  let lineSyncSig = '';
+  function lineSyncFrame() {
+    let sig = '';
+    const csC = getComputedStyle(centralEl);
+    sig += csC.left + ',' + csC.top + ';';
+    for (const el of wsEls) {
+      const cs = getComputedStyle(el);
+      sig += cs.left + ',' + cs.top + ';';
+    }
+    for (const tn of taskEls) {
+      const cs = getComputedStyle(tn.el);
+      sig += cs.left + ',' + cs.top + ',' + tn.el.classList.contains('collapsed-hidden') + ';';
+    }
+    if (sig !== lineSyncSig) {
+      lineSyncSig = sig;
+      syncLinesToRendered();
+      updateMiniMap();
+    }
+    requestAnimationFrame(lineSyncFrame);
+  }
+  requestAnimationFrame(lineSyncFrame);
 
   // ---- Cross-Link Data (shown inside expanded task detail, NOT as lines) ----
   const CROSS_LINKS = [
@@ -3665,9 +3870,9 @@
     const wsTasks = taskEls.filter(tn => tn.wsIndex === wsIndex);
     wsTasks.sort((a, b) => a.taskIndex - b.taskIndex);
 
-    const rect = container.getBoundingClientRect();
-    const W = rect.width;
-    const H = rect.height;
+    // Un-transformed container size (getBoundingClientRect is zoom-scaled)
+    const W = container.offsetWidth || container.scrollWidth;
+    const H = container.offsetHeight || container.scrollHeight;
 
     // If collapsed, expand first
     if (wsEl.classList.contains('collapsed')) {
@@ -4142,10 +4347,17 @@
 
 
   // ---- Init ----
+  let initRan = false;
   async function init() {
+    if (initRan) return; // only run once — fonts.ready / load / RAF all trigger this
+    initRan = true;
     layout();
     setTimeout(async () => {
-      storeOriginalPositions();
+      // Only store originals when no workstream filter is active.
+      // If the user navigated before this timeout fires, positions are already
+      // correctly stored by applyFilters() and we must NOT overwrite them with
+      // whatever positions happen to be current (possibly filtered/center-column).
+      if (activeFilters.size === 0) storeOriginalPositions();
       // Try loading saved layout from server
       const loaded = await loadLayoutFromServer();
       updateCompletion();
@@ -4162,3 +4374,4 @@
   window.addEventListener('load', init);
   requestAnimationFrame(init);
 })();
+// v2.1 — live connector sync + live mini-map
